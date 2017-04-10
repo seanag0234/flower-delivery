@@ -12,9 +12,14 @@ app = Flask(__name__)
 
 # The correlation_id of the order will be the key and the Order object the value
 orders = dict()
+driver_name = ''
 
 # Endpoint to receive an order from a flower shop
 @app.route('/order')
+def send_bid(order):
+	return "Unimplemented"
+
+@app.route('/deliverorder')
 def deliver_order(order):
 	return "Unimplemented"
 
