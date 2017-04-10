@@ -10,14 +10,35 @@ from flask import Flask, redirect, request, make_response, send_from_directory, 
 
 app = Flask(__name__)
 
+# The correlation_id of the order will be the key and the Order object the value
+orders = dict()
 
-@app.route('/example')
-def example():
-	response = make_response()
-	response.headers['Content-Type'] = 'application/json'
-	response.data = '{"JSON": True}'
-	return response
+# Endpoint to receive an order from a flower shop
+@app.route('/order')
+def deliver_order(order):
+	return "Unimplemented"
 
+def send_bid(bid):
+	return "Unimplemented"
+
+def calculate_bid(order):
+	return "Unimplemented"
+
+# Call Google Maps API
+def get_distance(location):
+	return "Unimplemented"
+
+# Call Weather Underground API
+def get_weather(location):
+	return "Unimplemented"
+
+# Send the
+def deliver_order(order):
+	return "Unimplemented"
+
+# Register with a flower shop
+def register(url):
+	return "Unimplemented"
 
 if __name__ == '__main__':
 	if len(sys.argv) < 2:
