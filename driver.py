@@ -1,5 +1,6 @@
 # for command line args
 import sys
+
 # json.loads() will turn json string to python object
 # json.dumps() will turn python object to json string
 import json
