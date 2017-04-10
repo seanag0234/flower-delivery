@@ -16,7 +16,7 @@ driver_name = ''
 
 # Endpoint to receive an order from a flower shop
 @app.route('/order')
-def send_bid(order):
+def send_bid(order="fsda"):
 	return "Unimplemented"
 
 @app.route('/deliverorder')
@@ -47,7 +47,8 @@ def register(url):
 
 if __name__ == '__main__':
 	if len(sys.argv) < 2:
-		print('Pass a port number to run on')
+		port = 5000
 	else:
 		port = int(sys.argv[1])
-		app.run(host='0.0.0.0', port=port)
+
+	app.run(host='0.0.0.0', port=port)
