@@ -6,7 +6,6 @@ import json
 
 # here are many imports from flask you may want to use
 from flask import Flask, redirect, request, make_response, send_from_directory, render_template
-from apscheduler.scheduler import Scheduler
 
 
 app = Flask(__name__)
@@ -66,9 +65,8 @@ def bid():
 
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        print('Pass a port number to run on and the ext url')
+    if len(sys.argv) < 2:
+        print('Pass in a port number')
     else:
         port = int(sys.argv[1])
-        url = sys.argv[2]
         app.run(host='0.0.0.0', port=port)

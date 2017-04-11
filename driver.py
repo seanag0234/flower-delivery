@@ -5,6 +5,7 @@ import sys
 import json
 import requests
 import random
+import Order
 # here are many imports from flask you may want to use
 from flask import Flask, redirect, request, make_response, send_from_directory, render_template
 
@@ -14,27 +15,44 @@ app = Flask(__name__)
 # The correlation_id of the order will be the key and the Order object the value
 orders = dict()
 driver_name = random.randint(0,999999)
+port = 5000
 
 # Endpoint to receive an order from a flower shop
 @app.route('/order')
 def send_bid():
+    #    def __init__(self, flower_shop_url, location, correlation_id):
 	order_json = request.args.get("order")
 	order_dict = json.loads(order_json)
-	order = Order()
+	url = order_dict['flower_shop_url']
+	order = Order.Order(order_dict['flower_shop_url'], order_dict['location'], order_dict['correlation_id'])
 	order.order_from_dict(order_dict)
 	bid = calculate_bid(order)
 	flower_shop_url = order.flower_shop_url + "/bid"
 	get_params = dict()
 	get_params["drivername"] = driver_name
-	get_params["bid"] = order.bid
+	get_params["bid"] = bid
 	get_params["orderid"] = order.correlation_id
-	response = requests.post(flower_shop_url, None, json.dumps(order.get_dict()), params=get_params)
+	response = requests.get(flower_shop_url, params=get_params)
+	return response
 
-	flower_shop_url = order.flower_shop_url
 
 @app.route('/deliverorder')
 def deliver_order():
 	return "Unimplemented"
+
+def create_response(response):
+	return (response.text, response.status_code, response.headers.items())
+
+# Register with a flower shop
+@app.route("/register")
+def register():
+	flower_shop_url = request.args.get("uri")
+	get_params = dict()
+	get_params["drivername"] = driver_name
+	get_params["uri"] = "http://localhost:" + str(port)
+	response = requests.get(flower_shop_url, params=get_params)
+	return create_response(response)
+
 
 def send_bid(bid):
 	return "Unimplemented"
@@ -54,12 +72,11 @@ def get_weather(location):
 def deliver_order(order):
 	return "Unimplemented"
 
-# Register with a flower shop
-def register(url):
-	return "Unimplemented"
+
 
 if __name__ == '__main__':
 	if len(sys.argv) < 2:
+		print "Running on port 5000"
 		port = 5000
 	else:
 		port = int(sys.argv[1])
