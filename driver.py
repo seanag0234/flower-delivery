@@ -21,27 +21,22 @@ port = 5000
 @app.route('/order')
 def send_bid():
     #    def __init__(self, flower_shop_url, location, correlation_id):
-	order_json = request.args.get("order")
-	order_dict = json.loads(order_json)
-	url = order_dict['flower_shop_url']
-	order = Order.Order(order_dict['flower_shop_url'], order_dict['location'], order_dict['correlation_id'])
-	order.order_from_dict(order_dict)
+	flower_shop_url = request.args.get("uri")
+	location = request.args.get("location")
+	id = request.args.get("id")
+	order = Order.Order(flower_shop_url, location, id)
 	bid = calculate_bid(order)
-	flower_shop_url = order.flower_shop_url + "/bid"
 	get_params = dict()
 	get_params["drivername"] = driver_name
 	get_params["bid"] = bid
 	get_params["orderid"] = order.correlation_id
 	response = requests.get(flower_shop_url, params=get_params)
-	return response
+	return create_response(response)
 
 
 @app.route('/deliverorder')
 def deliver_order():
 	return "Unimplemented"
-
-def create_response(response):
-	return (response.text, response.status_code, response.headers.items())
 
 # Register with a flower shop
 @app.route("/register")
@@ -52,10 +47,6 @@ def register():
 	get_params["uri"] = "http://localhost:" + str(port)
 	response = requests.get(flower_shop_url, params=get_params)
 	return create_response(response)
-
-
-def send_bid(bid):
-	return "Unimplemented"
 
 def calculate_bid(order):
 	return 95
@@ -71,6 +62,9 @@ def get_weather(location):
 # Send the
 def deliver_order(order):
 	return "Unimplemented"
+
+def create_response(response):
+	return (response.text, response.status_code, response.headers.items())
 
 
 
