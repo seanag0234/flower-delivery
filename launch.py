@@ -13,10 +13,14 @@ num_flowershops = int(args.f)
 flower_port = 4000
 
 for i in range(0, num_drivers):
-    os.system("python driver.py " + str(driver_port + i) + "&")
+   filename = "d:" + str(driver_port) + ".txt"
+   open(filename, 'a')
+   os.system("python driver.py " + str(driver_port + i) + " > " + filename + " 2>&1 &")
 
 for i in range(0, num_flowershops):
-    os.system("python flowershop.py " + str(flower_port + i) + "&")
+   filename = "f:" + str(flower_port) + ".txt"
+   open(filename, 'a')
+   os.system("python flowershop.py " + str(flower_port + i) + " > " + filename + " 2>&1 &")
 
 time.sleep(3)
 
@@ -25,8 +29,7 @@ time.sleep(3)
 # You will have to type yes for each process in the terminal
 
 for i in range(0, num_drivers):
-    os.system("freeport " + str(driver_port + i))
+   os.system("freeport " + str(driver_port + i))
 
 for i in range(0, num_flowershops):
-    os.system("freeport " + str(flower_port + i))
-
+   os.system("freeport " + str(flower_port + i))
