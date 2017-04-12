@@ -17,6 +17,4 @@ def get_temp(lat, long):
     temp = data["main"]["temp"]
     return int(kelvin_to_farenheit(int(temp)))
 
-get_temp(38,38)
-
 
