@@ -35,6 +35,7 @@ print("Driver Location: " + str(driver_location))
 # Endpoint to receive an order from a flower shop
 @app.route('/order')
 def send_bid():
+    global orders_received
     flower_shop_url = request.args.get("uri")
     order_location = request.args.get("location")
     id = request.args.get("id")
@@ -52,12 +53,13 @@ def send_bid():
 
 @app.route('/deliverorder')
 def deliver_order():
+    global orders_delivered
     id = request.args.get("id")
     if not id in orders_received:
         response = make_response()
         response.data = "That order id doesn't exist for driver " + str(driver_name)
         return response
-    order = orders_received["id"]
+    order = orders_received[id]
     order.delivered = True
     orders_delivered[id] = order
     get_params = dict()
@@ -74,13 +76,25 @@ def response(obj):
     response.data = json.dumps(obj)
     return response
 
-@app.route("/ordersrecieved")
+
+@app.route("/ordersreceived")
 def get_orders_received():
-    return response(orders_received)
+    all_orders = list()
+    for order in orders_received.values():
+        dictionary = order.get_dict()
+        all_orders.append(dictionary)
+
+    return response(all_orders)
+
 
 @app.route("/ordersdelivered")
 def get_orders_delivered():
-    return response(orders_delivered)
+    all_orders = list()
+    for order in orders_delivered.values():
+        dictionary = order.get_dict()
+        all_orders.append(dictionary)
+
+    return response(all_orders)
 
 # Register with a flower shop
 @app.route("/register")

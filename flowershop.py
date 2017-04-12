@@ -58,6 +58,7 @@ def send_get(url, params):
 
 @app.route('/order')
 def order():
+    global orders
     order = generate_order()
     log = dict()
     log['order'] = order #id
@@ -72,7 +73,8 @@ def order():
         get_params['uri'] = flower_url
         get_params['location'] = order[1]
         get_params['id'] = order[0]
-        requests.get(driver_url, params=get_params)
+        thread = Thread(target=send_get, args=(driver_url, get_params))
+        thread.start()
         log['drivers'].append(driver)
     # set timer to call process_bids(orderid)
 
@@ -103,6 +105,7 @@ def get_drivers():
 
 @app.route('/bid')
 def bid():
+    global orders
     drivername = request.args.get("drivername")
     bid = request.args.get("bid")
     orderid = str(request.args.get("orderid"))
