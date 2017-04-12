@@ -6,15 +6,19 @@ import json
 
 # here are many imports from flask you may want to use
 from flask import Flask, redirect, request, make_response, send_from_directory, render_template
+import gossipprotocol
 import requests
 import random
 
 app = Flask(__name__)
 port = 0
 flower_url = ''
+gossip = None
+gossip_endpoint = '/gossip'
 drivers = dict()
 orders = dict()
 order_id = 0
+
 
 def generate_location():
     latitude = random.uniform(35,40)
@@ -22,11 +26,13 @@ def generate_location():
     location = str(latitude) + "," + str(longitude)
     return location
 
+
 def response(obj):
     response = make_response()
     response.headers['Content-Type'] = 'application/json'
     response.data = json.dumps(obj)
     return response
+
 
 @app.route('/register')
 def register():
@@ -38,18 +44,20 @@ def register():
         log = {'result': 'success', 'drivers': drivers}
     return response(log)
 
+
 def generate_order():
     global order_id
     order_id += 1
-    return (order_id, generate_location(), len(drivers), dict())
+    return order_id, generate_location(), len(drivers), dict()
+
 
 @app.route('/order')
 def order():
     order = generate_order()
     log = dict()
-    log['order'] = order #id
+    log['order'] = order  # id
     orders[order[0]] = list()
-    log['returnURL'] = flower_url +":"+ str(port)
+    log['returnURL'] = flower_url + ":" + str(port)
     log['drivers'] = list()
 
     for driver in drivers.values():
@@ -61,16 +69,17 @@ def order():
         get_params['id'] = order[0]
         requests.get(driver_url, params=get_params)
         log['drivers'].append(driver)
-    #set timer to call process_bids(orderid)
+    # set timer to call process_bids(orderid)
 
     return response(log)
 
+
 def process_bids(orderid):
-    bestbid = 0;
+    bestbid = 0
     winning_driver = ''
     bids = orders[orderid][3]
 
-    for driver,bid in bids.items():
+    for driver, bid in bids.items():
         if bid > bestbid:
             bestbid = bid
             winning_driver = driver
@@ -79,7 +88,6 @@ def process_bids(orderid):
     get_params = dict()
     get_params['id'] = orderid
     requests.get(driver_url, get_params)
-
 
 
 @app.route('/bid')
@@ -96,11 +104,17 @@ def bid():
         process_bids(orderid)
     return response('bid recorded for ' + drivername + " and bid " + str(bid))
 
+
 @app.route("/orderdelivered")
 def order_delivered():
     orderid = request.args.get("id")
     drivername = request.args.get("drivername")
     return response("Order: " + orderid + " delivered by " + drivername)
+
+
+@app.route(gossip_endpoint)
+def gossip():
+    return gossip.respond(request)
 
 
 if __name__ == '__main__':
@@ -109,4 +123,5 @@ if __name__ == '__main__':
     else:
         port = int(sys.argv[1])
         flower_url = "http://localhost:" + str(port)
+        gossip = gossipprotocol.Gossip(flower_url, gossip_endpoint)
         app.run(host='0.0.0.0', port=port)
