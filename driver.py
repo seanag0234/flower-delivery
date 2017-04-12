@@ -59,6 +59,8 @@ def deliver_order():
 	orders_delivered[id] = order
 	get_params = dict()
 	get_params["id"] = id
+	get_params['drivername'] = driver_name
+	driver_location = order.location
 	response = requests.get(order.flower_shop_url + "/orderdelivered", params=get_params)
 	return create_response(response)
 

@@ -6,13 +6,21 @@ import json
 
 # here are many imports from flask you may want to use
 from flask import Flask, redirect, request, make_response, send_from_directory, render_template
-
+import requests
+import random
 
 app = Flask(__name__)
 port = 0
-url = ''
+flower_url = ''
 drivers = dict()
 orders = dict()
+order_id = 0
+
+def generate_location():
+    latitude = random.uniform(35,40)
+    longitude = random.uniform(-110,-80)
+    location = str(latitude) + "," + str(longitude)
+    return location
 
 def response(obj):
     response = make_response()
@@ -31,41 +39,68 @@ def register():
     return response(log)
 
 def generate_order():
-    return ('location', 'payment')
+    global order_id
+    order_id += 1
+    return (order_id, generate_location(), len(drivers), dict())
 
 @app.route('/order')
 def order():
     order = generate_order()
     log = dict()
     log['order'] = order #id
-    orders[order] = list()
-    log['returnURL'] = url +":"+ str(port)
+    orders[order[0]] = list()
+    log['returnURL'] = flower_url +":"+ str(port)
     log['drivers'] = list()
-    for driver in drivers.keys():
+
+    for driver in drivers.values():
         # scatter order to driver
+        driver_url = driver + "/order"
+        get_params = dict()
+        get_params['uri'] = flower_url
+        get_params['location'] = order[1]
+        get_params['id'] = order[0]
+        requests.get(driver_url, params=get_params)
         log['drivers'].append(driver)
     #set timer to call process_bids(orderid)
+
     return response(log)
 
 def process_bids(orderid):
     bestbid = 0;
-    bids = orders[orderid]
-    for i in range(len(bids)):
-        if bids[i][1] > bids[bestbid][1]:
-            bestbid = i
-    # send order_assignment to driver bids[bestbid] 
+    winning_driver = ''
+    bids = orders[orderid][3]
+
+    for driver,bid in bids.items():
+        if bid > bestbid:
+            bestbid = bid
+            winning_driver = driver
+
+    driver_url = drivers[winning_driver] + "/deliverorder"
+    get_params = dict()
+    get_params['id'] = orderid
+    requests.get(driver_url, get_params)
+
+
 
 @app.route('/bid')
 def bid():
     drivername = request.args.get("drivername")
     bid = request.args.get("bid")
     orderid = request.args.get("orderid")
-    orders[orderid] = (drivername, bid)
+    order = orders[orderid]
+    drivers_expected = order[2]
+    order[3][drivername] = bid
+    orders[orderid] = order
+
+    if drivers_expected == len(order[3]):
+        process_bids(orderid)
     return response('bid recorded for ' + drivername + " and bid " + str(bid))
 
 @app.route("/orderdelivered")
 def order_delivered():
-    return response("Unimplemented")
+    orderid = request.args.get("id")
+    drivername = request.args.get("drivername")
+    return response("Order: " + orderid + " delivered by " + drivername)
 
 
 if __name__ == '__main__':
@@ -73,4 +108,5 @@ if __name__ == '__main__':
         print('Pass in a port number')
     else:
         port = int(sys.argv[1])
+        flower_url = "http://localhost:" + str(port)
         app.run(host='0.0.0.0', port=port)
