@@ -15,7 +15,7 @@ app = Flask(__name__)
 
 # The correlation_id of the order will be the key and the Order object the value
 orders_received = dict()
-delivered_orders = dict()
+orders_delivered = dict()
 driver_name = random.randint(0,999999)
 port = 5000
 
@@ -25,19 +25,20 @@ def generate_location():
     location = str(latitude) + "," + str(longitude)
     return location
 
-location = generate_location()
-print location
+driver_location = generate_location()
+print "Driver Location: " + str(driver_location)
 
 # Endpoint to receive an order from a flower shop
 @app.route('/order')
 def send_bid():
     #    def __init__(self, flower_shop_url, location, correlation_id):
 	flower_shop_url = request.args.get("uri")
-	location = request.args.get("location")
+	order_location = request.args.get("location")
 	id = request.args.get("id")
-	order = Order(flower_shop_url, location, id)
+	order = Order(flower_shop_url, order_location, id)
+	bid = calculate_bid(order, driver_location)
+	order.bid = bid
 	orders_received[id] = order
-	bid = calculate_bid(order)
 	get_params = dict()
 	get_params["drivername"] = driver_name
 	get_params["bid"] = bid
@@ -48,7 +49,18 @@ def send_bid():
 
 @app.route('/deliverorder')
 def deliver_order():
-	return "Unimplemented"
+	id = request.args.get("id")
+	if not id in orders_received:
+		response = make_response()
+		response.data = "That order id doesn't exist for driver " + str(driver_name)
+		return response
+	order = orders_received["id"]
+	order.delivered = True
+	orders_delivered[id] = order
+	get_params = dict()
+	get_params["id"] = id
+	response = requests.get(order.flower_shop_url + "orderdelivered", params=get_params)
+	return create_response(response)
 
 # Register with a flower shop
 @app.route("/register")
@@ -60,19 +72,22 @@ def register():
 	response = requests.get(flower_shop_url, params=get_params)
 	return create_response(response)
 
-def calculate_bid(order):
-    bid =  directions_api.secondsA2B(location, order.location)
-    temp = get_weather(order.location)
+def calculate_bid(order, location):
+	bid =  directions_api.secondsA2B(location, order.location)
+	print "secondsA2B is " + str(bid)
+	order_temp = get_temp(order.location)
+	current_temp = get_temp(location)
+	temp = (order_temp + current_temp) / 2
 
-    if temp < 40:
-        bid += 10 * 40 - temp
-    elif temp > 80:
-        bid += 12 * 80 - temp
+	if temp < 40:
+		bid += 10 * (40 - temp)
+	elif temp > 80:
+		bid += 12 * (80 - temp)
 
-    return bid
+	return bid
 
 # Call Weather Underground API
-def get_weather(location):
+def get_temp(location):
 	return 81
 
 def create_response(response):

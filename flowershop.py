@@ -63,6 +63,10 @@ def bid():
     orders[orderid].append((drivername, bid))
     return response('bid recorded')
 
+@app.route("/orderdelivered")
+def order_delivered():
+    return response("Unimplemented")
+
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
