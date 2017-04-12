@@ -37,6 +37,7 @@ def response(obj):
 
 @app.route('/register')
 def register():
+    global drivers
     drivername = request.args.get("drivername")
     uri = request.args.get("uri")
     drivers[drivername] = uri
@@ -49,7 +50,7 @@ def register():
 def generate_order():
     global order_id
     order_id += 1
-    return order_id, generate_location(), len(drivers), dict()
+    return flower_url + "-" + str(order_id), generate_location(), len(drivers), dict()
 
 
 def send_get(url, params):
@@ -82,12 +83,12 @@ def order():
 
 
 def process_bids(orderid):
-    bestbid = 0
+    bestbid = sys.maxint
     winning_driver = ''
     bids = orders[orderid][3]
 
     for driver, bid in bids.items():
-        if bid > bestbid:
+        if int(bid) < int(bestbid):
             bestbid = bid
             winning_driver = driver
 
@@ -109,7 +110,7 @@ def bid():
     drivername = request.args.get("drivername")
     bid = request.args.get("bid")
     orderid = str(request.args.get("orderid"))
-    order = orders[int(orderid)]
+    order = orders[orderid]
     drivers_expected = order[2]
     order[3][drivername] = bid
     orders[orderid] = order
