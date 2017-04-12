@@ -96,7 +96,7 @@ def process_bids(orderid):
     thread.start()
 
 
-@app.route("drivers")
+@app.route("/drivers")
 def get_drivers():
     return response(drivers)
 
