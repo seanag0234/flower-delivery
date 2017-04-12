@@ -60,8 +60,8 @@ def bid():
     drivername = request.args.get("drivername")
     bid = request.args.get("bid")
     orderid = request.args.get("orderid")
-    orders[orderid].append((drivername, bid))
-    return response('bid recorded')
+    orders[orderid] = (drivername, bid)
+    return response('bid recorded for ' + drivername + " and bid " + str(bid))
 
 @app.route("/orderdelivered")
 def order_delivered():
