@@ -9,6 +9,7 @@ from flask import Flask, redirect, request, make_response, send_from_directory, 
 import gossipprotocol
 import requests
 import random
+from threading import Thread
 
 app = Flask(__name__)
 port = 0
@@ -51,13 +52,17 @@ def generate_order():
     return order_id, generate_location(), len(drivers), dict()
 
 
+def send_get(url, params):
+    requests.get(url, params=params)
+
+
 @app.route('/order')
 def order():
     order = generate_order()
     log = dict()
-    log['order'] = order  # id
-    orders[order[0]] = list()
-    log['returnURL'] = flower_url + ":" + str(port)
+    log['order'] = order #id
+    orders[order[0]] = order
+    log['returnURL'] = flower_url +":"+ str(port)
     log['drivers'] = list()
 
     for driver in drivers.values():
@@ -87,15 +92,21 @@ def process_bids(orderid):
     driver_url = drivers[winning_driver] + "/deliverorder"
     get_params = dict()
     get_params['id'] = orderid
-    requests.get(driver_url, get_params)
+    thread = Thread(target=send_get, args=(driver_url, get_params))
+    thread.start()
+
+
+@app.route("drivers")
+def get_drivers():
+    return response(drivers)
 
 
 @app.route('/bid')
 def bid():
     drivername = request.args.get("drivername")
     bid = request.args.get("bid")
-    orderid = request.args.get("orderid")
-    order = orders[orderid]
+    orderid = str(request.args.get("orderid"))
+    order = orders[int(orderid)]
     drivers_expected = order[2]
     order[3][drivername] = bid
     orders[orderid] = order

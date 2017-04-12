@@ -68,6 +68,20 @@ def deliver_order():
     return create_response(response)
 
 
+def response(obj):
+    response = make_response()
+    response.headers['Content-Type'] = 'application/json'
+    response.data = json.dumps(obj)
+    return response
+
+@app.route("/ordersrecieved")
+def get_orders_received():
+    return response(orders_received)
+
+@app.route("/ordersdelivered")
+def get_orders_delivered():
+    return response(orders_delivered)
+
 # Register with a flower shop
 @app.route("/register")
 def register():
