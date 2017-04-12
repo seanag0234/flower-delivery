@@ -24,7 +24,7 @@ time.sleep(3)
 # This section will kill the processes running on the ports that the script uses
 # You will have to type yes for each process in the terminal
 
-for i in range(0,num_drivers):
+for i in range(0, num_drivers):
     os.system("freeport " + str(driver_port + i))
 
 for i in range(0, num_flowershops):

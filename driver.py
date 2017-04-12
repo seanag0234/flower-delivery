@@ -5,6 +5,7 @@ import sys
 import json
 import requests
 import random
+import weather_api
 import directions_api
 from order import Order
 # here are many imports from flask you may want to use
@@ -31,7 +32,6 @@ print "Driver Location: " + str(driver_location)
 # Endpoint to receive an order from a flower shop
 @app.route('/order')
 def send_bid():
-    #    def __init__(self, flower_shop_url, location, correlation_id):
 	flower_shop_url = request.args.get("uri")
 	order_location = request.args.get("location")
 	id = request.args.get("id")
@@ -77,7 +77,7 @@ def calculate_bid(order, location):
 	print "secondsA2B is " + str(bid) + " for order " + str(order.correlation_id)
 	order_temp = get_temp(order.location)
 	current_temp = get_temp(location)
-	temp = (order_temp + current_temp) / 2
+	temp = (order_temp + current_temp) / 2.0
 
 	if temp < 40:
 		bid += 10 * (40 - temp)
@@ -88,7 +88,10 @@ def calculate_bid(order, location):
 
 # Call Weather Underground API
 def get_temp(location):
-	return 81
+    loc = location.split(",")
+    lat = loc[0]
+    long = loc[1]
+    return weather_api.get_temp(lat, long)
 
 def create_response(response):
 	return (response.text, response.status_code, response.headers.items())
