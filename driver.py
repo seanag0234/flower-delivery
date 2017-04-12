@@ -54,7 +54,7 @@ def deliver_order():
 		response = make_response()
 		response.data = "That order id doesn't exist for driver " + str(driver_name)
 		return response
-	order = orders_received["id"]
+	order = orders_received[id]
 	order.delivered = True
 	orders_delivered[id] = order
 	get_params = dict()
@@ -63,6 +63,20 @@ def deliver_order():
 	driver_location = order.location
 	response = requests.get(order.flower_shop_url + "/orderdelivered", params=get_params)
 	return create_response(response)
+
+def response(obj):
+    response = make_response()
+    response.headers['Content-Type'] = 'application/json'
+    response.data = json.dumps(obj)
+    return response
+
+@app.route("/ordersrecieved")
+def get_orders_received():
+    return response(orders_received)
+
+@app.route("/ordersdelivered")
+def get_orders_delivered():
+    return response(orders_delivered)
 
 # Register with a flower shop
 @app.route("/register")
