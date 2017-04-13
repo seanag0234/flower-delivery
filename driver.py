@@ -18,7 +18,6 @@ app = Flask(__name__)
 # The correlation_id of the order will be the key and the Order object the value
 orders_received = dict()
 orders_delivered = dict()
-driver_name = "Driver " + str(random.randint(0,999999))
 port = 5000
 driver_url = "http://localhost:" + str(port)
 
@@ -58,7 +57,7 @@ def deliver_order():
     id = request.args.get("id")
     if not id in orders_received:
         response = make_response()
-        response.data = "That order id doesn't exist for driver " + str(driver_name)
+        response.data = "That order id doesn't exist for driver " + str(driver_url)
         return response
     order = orders_received[id]
     order.delivered = True
