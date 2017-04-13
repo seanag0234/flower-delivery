@@ -16,7 +16,6 @@ port = 0
 flower_url = ''
 gossip = None
 gossip_endpoint = '/gossip'
-drivers = list()
 orders = dict()
 order_id = 0
 orders_delivered = dict()
@@ -38,22 +37,19 @@ def response(obj):
 
 @app.route('/register')
 def register():
-    global drivers
     global gossip
     uri = request.args.get("uri")
     gossip.add_driver(uri)
-    if not uri in drivers:
-        drivers.append(uri)
     log = "uri needed"
-    if  uri:
-        log = {'result': 'success', 'drivers': drivers}
+    if uri:
+        log = {'result': 'success', 'drivers': gossip.my_drivers}
     return response(log)
 
 
 def generate_order():
     global order_id
     order_id += 1
-    return flower_url + "-" + str(order_id), generate_location(), len(drivers), dict()
+    return flower_url + "-" + str(order_id), generate_location(), len(gossip.my_drivers), dict()
 
 
 def send_get(url, params):
@@ -68,17 +64,13 @@ def get_orders_delivered():
 @app.route('/order')
 def order():
     global orders
-    global drivers
     order = generate_order()
     log = dict()
     log['order'] = order #id
     orders[order[0]] = order
     log['returnURL'] = flower_url +":"+ str(port)
     log['drivers'] = list()
-    for driver in gossip.my_drivers:
-        if driver not in drivers:
-            drivers.append(driver)
-
+    drivers = gossip.my_drivers
     for driver in drivers:
         # scatter order to driver
         driver_url = driver + "/order"
@@ -113,7 +105,7 @@ def process_bids(orderid):
 
 @app.route("/drivers")
 def get_drivers():
-    return response(drivers)
+    return response(gossip.my_drivers)
 
 
 @app.route('/bid')

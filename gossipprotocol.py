@@ -60,6 +60,10 @@ class Gossip(threading.Thread):
             new_shop = response['shop']
             self.add_flower_shop(new_shop)
             # self.flower_shops_lock.release()
+        if 'driver' in response:
+            flower_shop.last_driver += 1
+            new_driver = response['driver']
+            self.add_driver(new_driver)
 
     def add_flower_shop(self, url):
         # self.flower_shops_lock.acquire()
