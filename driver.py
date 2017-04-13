@@ -20,6 +20,7 @@ orders_received = dict()
 orders_delivered = dict()
 driver_name = "Driver " + str(random.randint(0,999999))
 port = 5000
+driver_url = "http://localhost:" + str(port)
 
 
 def generate_location():
@@ -44,7 +45,7 @@ def send_bid():
     order.bid = bid
     orders_received[id] = order
     get_params = dict()
-    get_params["drivername"] = driver_name
+    get_params["uri"] = driver_url
     get_params["bid"] = bid
     get_params["orderid"] = order.correlation_id
     response = requests.get(flower_shop_url + "/bid", params=get_params)
@@ -64,7 +65,7 @@ def deliver_order():
     orders_delivered[id] = order
     get_params = dict()
     get_params["id"] = id
-    get_params['drivername'] = driver_name
+    get_params['uri'] = driver_url
     driver_location = order.location
     response = requests.get(order.flower_shop_url + "/orderdelivered", params=get_params)
     return create_response(response)
@@ -101,8 +102,7 @@ def get_orders_delivered():
 def register():
     flower_shop_url = request.args.get("uri")
     get_params = dict()
-    get_params["drivername"] = driver_name
-    get_params["uri"] = "http://localhost:" + str(port)
+    get_params["uri"] = driver_url
     response = requests.get(flower_shop_url, params=get_params)
     return create_response(response)
 
@@ -113,7 +113,7 @@ def calculate_bid(order, location):
     order_temp = get_temp(order.location)
     current_temp = get_temp(location)
     temp = (order_temp + current_temp) / 2.0
-
+    print ("temp is " + str(temp))
     if temp < 40:
         bid += 10 * (40 - temp)
     elif temp > 80:
@@ -140,5 +140,5 @@ if __name__ == '__main__':
         port = 5000
     else:
         port = int(sys.argv[1])
-
+        driver_url = "http://localhost:" + str(port)
     app.run(host='0.0.0.0', port=port)

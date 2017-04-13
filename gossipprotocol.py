@@ -70,6 +70,7 @@ class Gossip(threading.Thread):
 
     def add_driver(self, url):
         if url not in self.my_drivers:
+            print ("adding driver " + url)
             self.my_drivers.append(url)
 
     def respond(self, request):

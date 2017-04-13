@@ -16,9 +16,10 @@ port = 0
 flower_url = ''
 gossip = None
 gossip_endpoint = '/gossip'
-drivers = dict()
+drivers = list()
 orders = dict()
 order_id = 0
+orders_delivered = dict()
 
 
 def generate_location():
@@ -38,11 +39,13 @@ def response(obj):
 @app.route('/register')
 def register():
     global drivers
-    drivername = request.args.get("drivername")
+    global gossip
     uri = request.args.get("uri")
-    drivers[drivername] = uri
-    log = "drivername and uri needed"
-    if drivername and uri:
+    gossip.add_driver(uri)
+    if not uri in drivers:
+        drivers.append(uri)
+    log = "uri needed"
+    if  uri:
         log = {'result': 'success', 'drivers': drivers}
     return response(log)
 
@@ -57,17 +60,26 @@ def send_get(url, params):
     requests.get(url, params=params)
 
 
+@app.route('/ordersdelivered')
+def get_orders_delivered():
+    return response(orders_delivered)
+
+
 @app.route('/order')
 def order():
     global orders
+    global drivers
     order = generate_order()
     log = dict()
     log['order'] = order #id
     orders[order[0]] = order
     log['returnURL'] = flower_url +":"+ str(port)
     log['drivers'] = list()
+    for driver in gossip.my_drivers:
+        if driver not in drivers:
+            drivers.append(driver)
 
-    for driver in drivers.values():
+    for driver in drivers:
         # scatter order to driver
         driver_url = driver + "/order"
         get_params = dict()
@@ -92,7 +104,7 @@ def process_bids(orderid):
             bestbid = bid
             winning_driver = driver
 
-    driver_url = drivers[winning_driver] + "/deliverorder"
+    driver_url = winning_driver + "/deliverorder"
     get_params = dict()
     get_params['id'] = orderid
     thread = Thread(target=send_get, args=(driver_url, get_params))
@@ -107,24 +119,28 @@ def get_drivers():
 @app.route('/bid')
 def bid():
     global orders
-    drivername = request.args.get("drivername")
+    uri = request.args.get("uri")
     bid = request.args.get("bid")
     orderid = str(request.args.get("orderid"))
     order = orders[orderid]
     drivers_expected = order[2]
-    order[3][drivername] = bid
+    order[3][uri] = bid
     orders[orderid] = order
 
     if drivers_expected == len(order[3]):
         process_bids(orderid)
-    return response('bid recorded for ' + drivername + " and bid " + str(bid))
+    return response('bid recorded for ' + uri + " and bid " + str(bid))
 
 
 @app.route("/orderdelivered")
 def order_delivered():
+    global orders_delivered
     orderid = request.args.get("id")
-    drivername = request.args.get("drivername")
-    return response("Order: " + orderid + " delivered by " + drivername)
+    uri = request.args.get("uri")
+    if uri not in orders_delivered.keys():
+        orders_delivered[uri] = list()
+    orders_delivered[uri].append(orderid)
+    return response("Order: " + orderid + " delivered by " + uri)
 
 
 @app.route(gossip_endpoint)
