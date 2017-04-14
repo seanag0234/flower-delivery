@@ -56,6 +56,15 @@ def send_get(url, params):
     requests.get(url, params=params)
 
 
+@app.route("/flowershops")
+def get_flower_shops():
+    flower_shops = list()
+    for gossip_info in gossip.my_flower_shops:
+        flower_shops.append(gossip_info.url)
+
+    return response(flower_shops)
+
+
 @app.route('/ordersdelivered')
 def get_orders_delivered():
     return response(orders_delivered)
