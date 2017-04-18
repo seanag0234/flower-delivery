@@ -32,7 +32,7 @@ class Gossip(threading.Thread):
 
     def run(self):
         while True:
-            time.sleep(1)
+            time.sleep(.1)
             flower_shop = self.get_request_data()
             if not flower_shop:
                 continue
